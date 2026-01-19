@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<nav th:fragment="navbar" class="navbar navbar-expand-lg fixed-top bg-white shadow-sm">
+    <div class="container px-4">
+        <a class="navbar-brand fw-bold text-primary fs-3" href="/">
+            <i class="fas fa-brain me-2"></i>QuizAI
+        </a>
+
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="fas fa-bars fs-3 text-dark"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-lg-4 align-items-center">
+
+                <li class="nav-item">
+                    <a class="nav-link fw-bold text-dark" href="/de-thi">Đề Thi</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-bold text-dark" href="/flashcard">Flashcard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-bold text-dark" href="/lich-su">Lịch Sử</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-bold text-dark" href="/huong-dan">Hướng Dẫn</a>
+                </li>
+
+                <li class="nav-item dropdown ms-lg-3 mt-2 mt-lg-0" th:if="${session.currentUser != null}">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 p-1 pe-3 rounded-pill border bg-white shadow-sm"
+                       href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+
+                        <img th:src="'https://ui-avatars.com/api/?background=0D6EFD&color=fff&name=' + ${session.currentUser.fullName}"
+                             alt="Avatar" class="rounded-circle" width="32" height="32">
+
+                        <div class="d-flex flex-column" style="line-height: 1.2;">
+                            <span class="small fw-bold text-dark" th:text="${session.currentUser.fullName}">Tên User</span>
+                            <span class="text-warning" style="font-size: 0.75rem; font-weight: 800;">
+                                    <i class="fas fa-coins me-1"></i>0 Token
+                                </span>
+                        </div>
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 p-2 rounded-3">
+                        <li>
+                            <div class="px-3 py-2 border-bottom mb-2">
+                                <span class="small text-muted d-block">Xin chào,</span>
+                                <span class="fw-bold text-dark" th:text="${session.currentUser.fullName}">User</span>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center fw-bold text-dark py-2 rounded-2" href="/nap-token" style="transition: 0.2s;">
+                                <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                                <div>
+                                    <span>Nạp Token</span><br>
+                                    <span class="text-muted small fw-normal" style="font-size: 11px;">Mở khóa AI</span>
+                                </div>
+                            </a>
+                        </li>
+
+                        <li><hr class="dropdown-divider my-2"></li>
+
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center text-danger fw-bold py-2 rounded-2" href="/dang-xuat">
+                                <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                </div>
+                                Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item ms-lg-3" th:unless="${session.currentUser != null}">
+                    <a href="/login" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                        Đăng Nhập
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+</body>
+</html>

@@ -1,0 +1,208 @@
+/* =========================================
+   1. GLOBAL & RESET (Cài đặt chung)
+   ========================================= */
+:root {
+    --primary-color: #0d6efd; /* Xanh Bootstrap chuẩn */
+    --primary-hover: #0b5ed7;
+    --bg-body: #f3f4f6;       /* Xám rất nhạt cho nền */
+    --chat-user-bg: #0084ff;  /* Xanh Messenger */
+    --chat-ai-bg: #e4e6eb;    /* Xám Messenger */
+}
+
+body {
+    background-color: var(--bg-body);
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    padding-top: 76px; /* Để nội dung không bị Navbar che mất */
+    color: #333;
+}
+
+/* Thanh cuộn (Scrollbar) đẹp hơn cho Webkit (Chrome, Edge) */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+/* =========================================
+   2. NAVBAR (Thanh menu trên cùng)
+   ========================================= */
+.navbar {
+    background: rgba(255, 255, 255, 0.9); /* Màu trắng trong suốt */
+    backdrop-filter: blur(10px);          /* Hiệu ứng kính mờ */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03); /* Bóng đổ rất nhẹ */
+    transition: all 0.3s ease;
+}
+
+/* Link menu hover vào đổi màu xanh */
+.nav-link:hover {
+    color: var(--primary-color) !important;
+}
+
+/* Menu con (Dropdown - User & Token) */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    padding: 10px;
+    min-width: 260px; /* Đủ rộng để chứa nút Token */
+
+    /* Hiệu ứng trượt lên nhẹ khi mở */
+    animation: slideUpFade 0.2s ease-out forwards;
+}
+
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hiệu ứng riêng cho mục "Nạp Token" */
+.hover-yellow {
+    transition: all 0.2s;
+}
+.hover-yellow:hover {
+    background-color: #fff8e1 !important; /* Nền vàng nhạt */
+    color: #b78900 !important;            /* Chữ vàng đậm */
+}
+.hover-yellow:hover .bg-warning {
+    background-color: #ffd54f !important; /* Icon đậm hơn chút */
+}
+
+/* =========================================
+   3. COMPONENTS (Thẻ Card, Nút bấm)
+   ========================================= */
+
+/* Hiệu ứng nhấc thẻ lên khi di chuột (Dùng cho Flashcard) */
+.hover-up {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+.hover-up:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+}
+
+/* Viền nét đứt (Dùng cho nút thêm câu hỏi) */
+.border-dashed {
+    border-style: dashed !important;
+}
+
+/* Badge (Nhãn số câu hỏi) */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* =========================================
+   4. AI CHAT SIDEBAR (Offcanvas)
+   ========================================= */
+
+/* Tùy chỉnh độ rộng của Sidebar AI */
+.offcanvas-ai {
+    width: 450px !important; /* Rộng hơn mặc định cho dễ chat */
+    border-left: none;
+    box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+}
+
+/* Trên điện thoại thì full màn hình */
+@media (max-width: 576px) {
+    .offcanvas-ai {
+        width: 100% !important;
+    }
+}
+
+/* Vùng chứa tin nhắn */
+.chat-box {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    background-color: #fff;
+    overflow-y: auto;
+}
+
+/* Tin nhắn của AI (Bên trái) */
+.message-ai {
+    align-self: flex-start;
+    background-color: var(--chat-ai-bg);
+    color: #050505;
+    padding: 12px 18px;
+    border-radius: 20px;
+    border-bottom-left-radius: 4px; /* Góc nhọn bên dưới */
+    max-width: 85%;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    position: relative;
+}
+
+/* Tin nhắn của User (Bên phải) */
+.message-user {
+    align-self: flex-end;
+    background-color: var(--chat-user-bg);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 20px;
+    border-bottom-right-radius: 4px; /* Góc nhọn bên dưới */
+    max-width: 85%;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    box-shadow: 0 2px 5px rgba(0, 132, 255, 0.2);
+}
+
+/* =========================================
+   5. FLOATING ACTION BUTTON (Nút tròn nổi)
+   ========================================= */
+.btn-floating-ai {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    border: 4px solid white; /* Viền trắng tách biệt với nền */
+    box-shadow: 0 4px 20px rgba(13, 110, 253, 0.4);
+    z-index: 1050; /* Luôn nằm trên cùng */
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+/* Hover vào nút thì phóng to nhẹ */
+.btn-floating-ai:hover {
+    transform: scale(1.1);
+    background-color: var(--primary-hover);
+}
+
+/* Hiệu ứng sóng lan tỏa (Pulse) */
+@keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(13, 110, 253, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+}
+
+.btn-pulse {
+    animation: pulse-ring 2s infinite;
+}
+
+/* Riêng cho nút màu vàng (Trang Flashcard) */
+.btn-pulse.bg-warning {
+    color: #fff;
+    animation: pulse-ring-yellow 2s infinite;
+}
+@keyframes pulse-ring-yellow {
+    0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(255, 193, 7, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+}

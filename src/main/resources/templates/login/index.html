@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng nhập - QuizAI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; }
+        .auth-card { width: 400px; padding: 40px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        .logo-text { font-size: 28px; font-weight: 800; color: #0d6efd; margin-bottom: 5px; }
+        .btn-google { background: white; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="auth-card">
+    <div class="text-center mb-4">
+        <div class="logo-text"><i class="fas fa-brain me-2"></i>QuizAI</div>
+        <p class="text-muted text-center small" id="subTitle">Đăng nhập để tiếp tục</p>
+    </div>
+
+    <div id="loginForm">
+        <form onsubmit="xuLyDangNhap(event)">
+            <div class="mb-3">
+                <input type="email" id="loginEmail" class="form-control" placeholder="Email" required>
+            </div>
+            <div class="mb-3">
+                <input type="password" id="loginPass" class="form-control" placeholder="Mật khẩu" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold mb-3 rounded-3">Đăng Nhập</button>
+        </form>
+
+        <div class="d-flex align-items-center mb-3">
+            <hr class="flex-grow-1 text-muted"><span class="mx-2 text-muted small">Hoặc</span><hr class="flex-grow-1 text-muted">
+        </div>
+        <button class="btn btn-google"><img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="20"> Tiếp tục với Google</button>
+        <p class="text-center text-muted mb-0">Chưa có tài khoản? <a href="#" onclick="toggleForms()" class="fw-bold text-decoration-none">Đăng ký ngay</a></p>
+    </div>
+
+    <div id="registerForm" class="hidden">
+        <form onsubmit="xuLyDangKy(event)">
+            <div class="row g-2 mb-3">
+                <div class="col-6"><input type="text" id="regHo" class="form-control" placeholder="Họ" required></div>
+                <div class="col-6"><input type="text" id="regTen" class="form-control" placeholder="Tên" required></div>
+            </div>
+            <div class="mb-3">
+                <input type="email" id="regEmail" class="form-control" placeholder="Email của bạn" required>
+            </div>
+            <div class="mb-3">
+                <input type="password" id="regPass" class="form-control" placeholder="Mật khẩu mới" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100 py-2 fw-bold mb-3 rounded-3">Đăng Ký Mới</button>
+        </form>
+
+        <p class="text-center text-muted mb-0 mt-3">Đã có tài khoản? <a href="#" onclick="toggleForms()" class="fw-bold text-decoration-none">Đăng nhập</a></p>
+    </div>
+</div>
+
+<script>
+    // 1. Chuyển form qua lại
+    function toggleForms() {
+        document.getElementById('loginForm').classList.toggle('hidden');
+        document.getElementById('registerForm').classList.toggle('hidden');
+        const title = document.getElementById('subTitle');
+        title.innerText = title.innerText.includes("Đăng nhập") ? "Tạo tài khoản miễn phí" : "Đăng nhập để tiếp tục";
+    }
+
+    // 2. XỬ LÝ ĐĂNG KÝ (GỌI API JAVA)
+    function xuLyDangKy(event) {
+        event.preventDefault(); // CHẶN LOAD LẠI TRANG
+
+        // Lấy dữ liệu chính xác từ ID
+        const ho = document.getElementById('regHo').value;
+        const ten = document.getElementById('regTen').value;
+        const email = document.getElementById('regEmail').value;
+        const pass = document.getElementById('regPass').value;
+
+        // Gửi lên Server
+        fetch('/api/dang-ky', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                fullName: ho + " " + ten,
+                email: email,
+                password: pass
+            })
+        })
+            .then(response => response.text())
+            .then(data => {
+                alert(data); // Hiện thông báo từ Java
+                if (data.includes("thành công")) {
+                    toggleForms(); // Chuyển về đăng nhập
+                }
+            })
+            .catch(error => alert("Lỗi kết nối: " + error));
+    }
+
+    // 3. XỬ LÝ ĐĂNG NHẬP (GỌI API JAVA)
+    function xuLyDangNhap(event) {
+        event.preventDefault(); // CHẶN LOAD LẠI TRANG
+
+        const email = document.getElementById('loginEmail').value;
+        const pass = document.getElementById('loginPass').value;
+
+        fetch('/api/dang-nhap', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, password: pass })
+        })
+            .then(response => response.text())
+            .then(data => {
+                if (data === "OK") {
+                    window.location.href = "/de-thi"; // Đăng nhập đúng -> Vào trang đề
+                } else {
+                    alert(data); // Báo lỗi (Sai pass, ko tồn tại...)
+                }
+            })
+            .catch(error => alert("Lỗi kết nối: " + error));
+    }
+</script>
+
+</body>
+</html>

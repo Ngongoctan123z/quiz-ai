@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách đề thi - QuizAI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>body { background-color: #f8f9fa; padding-top: 80px; }</style>
+</head>
+<body>
+
+<nav th:replace="~{layout/navbar :: navbar}"></nav>
+
+<div class="container">
+    <h3 class="fw-bold mb-4 text-primary"><i class="fas fa-list-alt me-2"></i>Danh Sách Đề Đã Tạo</h3>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Mã Đề</th>
+                    <th>Tên Đề Thi</th>
+                    <th>Người tạo</th>
+                    <th class="text-end pe-4">Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="exam : ${examList}">
+                    <td class="ps-4 fw-bold text-primary" th:text="${exam.examCode}">DE-001</td>
+                    <td th:text="${exam.title}">Tiêu đề</td>
+                    <td th:text="${exam.description}">Mô tả</td>
+                    <td class="text-end pe-4">
+                        <a th:href="@{/chi-tiet-de/{code}(code=${exam.examCode})}" class="btn btn-sm btn-primary fw-bold">
+                            <i class="fas fa-eye me-1"></i> Chi tiết
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<div th:fragment="sidebar" id="aiSidebar">
+    <div class="p-3 border-bottom bg-light fw-bold text-primary d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-sparkles me-2"></i>AI Copilot</span>
+        <button class="btn-close" onclick="toggleAI()"></button> </div>
+
+    <div class="flex-grow-1 p-3 bg-white" style="overflow-y: auto;">
+        <div class="alert alert-info">
+            <strong>Xin chào!</strong> <br>
+            Bạn muốn tạo đề thi về chủ đề gì? Hãy nhập yêu cầu bên dưới.
+        </div>
+    </div>
+
+    <div class="p-3 border-top bg-light">
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="Nhập yêu cầu (VD: Tạo 10 câu về Java)...">
+            <button class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>

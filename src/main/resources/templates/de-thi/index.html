@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Soạn Đề Thi - QuizAI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f6f8; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+
+        /* Layout chia đôi */
+        .main-container { display: flex; height: 100vh; padding-top: 60px; }
+        .left-panel { flex: 7; overflow-y: auto; padding: 20px; border-right: 1px solid #ddd; }
+        .right-panel { flex: 3; display: flex; flex-direction: column; background: #fff; border-left: 1px solid #ddd; }
+
+        /* Chat UI */
+        .chat-history { flex: 1; overflow-y: auto; padding: 15px; background: #f8f9fa; }
+        .chat-input-area { padding: 15px; border-top: 1px solid #eee; background: white; }
+        .msg { margin-bottom: 15px; max-width: 90%; padding: 10px 15px; border-radius: 15px; font-size: 14px; }
+        .msg-user { background: #0d6efd; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .msg-ai { background: #e9ecef; color: #333; align-self: flex-start; border-bottom-left-radius: 2px; }
+
+        /* Card câu hỏi */
+        .card-question { border-left: 4px solid #0d6efd; background: white; margin-bottom: 15px; }
+        .card-question:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .ai-question-preview { font-size: 13px; border: 1px dashed #ccc; padding: 8px; margin-top: 5px; background: #fff; }
+
+        /* KHUNG HIỆN LINK SAU KHI LƯU */
+        #successPanel {
+            display: none; /* Mặc định ẩn */
+            margin-top: 20px; padding: 20px;
+            background: #d1e7dd; border: 1px solid #badbcc; border-radius: 8px;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<nav th:replace="~{layout/navbar :: navbar}"></nav>
+
+<div class="main-container">
+
+    <div class="left-panel">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold text-dark"><i class="fas fa-file-alt me-2"></i>Nội dung đề thi</h4>
+            <button onclick="luuDatabase()" class="btn btn-success fw-bold shadow-sm btn-sm">
+                <i class="fas fa-save me-2"></i>LƯU ĐỀ THI
+            </button>
+        </div>
+
+        <div class="card border-0 shadow-sm p-3 mb-4">
+            <label class="fw-bold small text-muted mb-1">Tên bài thi:</label>
+            <input type="text" id="tenDeThi" class="form-control fw-bold" value="Đề thi mới">
+        </div>
+
+        <button onclick="moModalThuCong()" class="btn btn-outline-primary w-100 fw-bold py-2 mb-3 border-dashed">
+            <i class="fas fa-plus-circle me-2"></i>Thêm câu hỏi thủ công
+        </button>
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-bold text-muted small">DANH SÁCH CÂU HỎI</span>
+            <span class="badge bg-secondary">Tổng: <span id="soLuongCau">0</span></span>
+        </div>
+
+        <div id="emptyState" class="text-center py-5 text-muted bg-white rounded shadow-sm border">
+            <i class="fas fa-folder-open fa-2x mb-2 text-secondary opacity-50"></i>
+            <p class="small">Chưa có câu hỏi nào.</p>
+        </div>
+        <div id="listCauHoiContainer"></div>
+
+        <div id="successPanel">
+            <h5 class="fw-bold text-success"><i class="fas fa-check-circle me-2"></i>Lưu thành công!</h5>
+            <p class="mb-2">Gửi link này cho học sinh làm bài:</p>
+            <div class="input-group mb-3">
+                <input type="text" id="examLink" class="form-control bg-white fw-bold text-primary" readonly>
+                <button class="btn btn-primary" onclick="copyLink()"><i class="fas fa-copy"></i> Copy</button>
+            </div>
+
+            <div class="text-end border-top pt-2">
+                <span class="text-muted small me-2">Muốn xem điểm học sinh?</span>
+                <a id="btnXemChiTiet" href="#" class="btn btn-sm btn-success fw-bold">
+                    Xem chi tiết & Điểm số <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <div style="height: 100px;"></div> </div>
+
+    <div class="right-panel">
+        <div class="p-3 border-bottom bg-white d-flex align-items-center justify-content-between">
+            <span class="fw-bold text-primary"><i class="fas fa-robot me-2"></i>Trợ lý AI</span>
+            <span class="badge bg-warning text-dark" style="font-size: 10px;">PRO</span>
+        </div>
+
+        <div class="chat-history d-flex flex-column" id="chatBox">
+            <div class="msg msg-ai">
+                Xin chào! Nhập chủ đề để tạo câu hỏi nhé.<br>
+                (VD: <i>"Tạo 5 câu về Sinh học lớp 9"</i>)
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <div class="input-group">
+                <input type="text" id="aiInput" class="form-control" placeholder="Nhập yêu cầu..." onkeypress="nhanEnter(event)">
+                <button onclick="guiTinNhan()" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal fade" id="modalNhapLieu" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold">Nhập Câu Hỏi</h5>
+                <button type="button" class="btn-close" onclick="dongModalThuCong()"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNhap">
+                    <div class="mb-3"><label class="fw-bold">Nội dung:</label><textarea id="noiDung" class="form-control" rows="2" required></textarea></div>
+                    <div class="row g-2">
+                        <div class="col-6"><div class="input-group"><div class="input-group-text"><input type="radio" name="dapAnDung" value="A" checked></div><input type="text" id="daA" class="form-control" placeholder="A" required></div></div>
+                        <div class="col-6"><div class="input-group"><div class="input-group-text"><input type="radio" name="dapAnDung" value="B"></div><input type="text" id="daB" class="form-control" placeholder="B" required></div></div>
+                        <div class="col-6"><div class="input-group"><div class="input-group-text"><input type="radio" name="dapAnDung" value="C"></div><input type="text" id="daC" class="form-control" placeholder="C" required></div></div>
+                        <div class="col-6"><div class="input-group"><div class="input-group-text"><input type="radio" name="dapAnDung" value="D"></div><input type="text" id="daD" class="form-control" placeholder="D" required></div></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="dongModalThuCong()">Hủy</button>
+                <button type="button" class="btn btn-primary fw-bold" onclick="luuCauHoiVaoList()">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let danhSach = [];
+    let myModalInstance = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Init Modal
+        const modalElement = document.getElementById('modalNhapLieu');
+        myModalInstance = new bootstrap.Modal(modalElement, { backdrop: 'static', keyboard: false });
+    });
+
+    // --- MODAL ---
+    function moModalThuCong() { document.getElementById("formNhap").reset(); myModalInstance.show(); }
+    function dongModalThuCong() {
+        myModalInstance.hide();
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove()); // Xóa màn đen nếu bị kẹt
+        document.body.style = "";
+    }
+
+    function luuCauHoiVaoList() {
+        let nd = document.getElementById("noiDung").value.trim();
+        let a = document.getElementById("daA").value.trim();
+        let b = document.getElementById("daB").value.trim();
+        let c = document.getElementById("daC").value.trim();
+        let d = document.getElementById("daD").value.trim();
+        if(!nd || !a || !b || !c || !d) { alert("Thiếu thông tin!"); return; }
+
+        let radio = document.querySelector('input[name="dapAnDung"]:checked');
+        danhSach.push({ content: nd, optionA: a, optionB: b, optionC: c, optionD: d, correctAnswer: radio ? radio.value : "A" });
+        renderList(); dongModalThuCong();
+    }
+
+    // --- RENDER ---
+    function renderList() {
+        let container = document.getElementById("listCauHoiContainer");
+        let empty = document.getElementById("emptyState");
+        document.getElementById("soLuongCau").innerText = danhSach.length;
+
+        if (danhSach.length === 0) {
+            empty.style.display = "block"; container.innerHTML = "";
+        } else {
+            empty.style.display = "none";
+            let html = "";
+            danhSach.forEach((q, i) => {
+                html += `
+                <div class="card card-question p-3 shadow-sm animate__animated animate__fadeIn">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="fw-bold text-primary mb-2">Câu ${i+1}: ${q.content}</h6>
+                        <div>
+                            <span class="badge bg-success me-2">${q.correctAnswer}</span>
+                            <button onclick="xoa(${i})" class="btn btn-sm text-danger"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="row small text-muted g-2">
+                        <div class="col-6">A. ${q.optionA}</div><div class="col-6">B. ${q.optionB}</div>
+                        <div class="col-6">C. ${q.optionC}</div><div class="col-6">D. ${q.optionD}</div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+    }
+    function xoa(i) { if(confirm("Xóa nhé?")) { danhSach.splice(i, 1); renderList(); } }
+
+    // --- AI ---
+    function nhanEnter(e) { if(e.key === 'Enter') guiTinNhan(); }
+    function guiTinNhan() {
+        let input = document.getElementById("aiInput"), text = input.value.trim();
+        if(!text) return;
+        themBongChat(text, "user"); input.value = "";
+        let loadingId = themBongChat('<i class="fas fa-spinner fa-spin"></i>...', "ai");
+
+        fetch('/api/generate-ai', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ topic: text, count: 5 }) })
+            .then(res => res.json()).then(data => {
+            document.getElementById(loadingId).remove();
+            let msgId = "msg_" + Date.now();
+            let jsonData = encodeURIComponent(JSON.stringify(data));
+            themBongChat(`Tìm thấy ${data.length} câu.<br><button onclick="themTuChat('${jsonData}', '${msgId}')" class="btn btn-sm btn-primary mt-1 w-100">Thêm vào đề</button>`, "ai", msgId);
+        });
+    }
+    function themBongChat(html, type, id=null) {
+        let box = document.getElementById("chatBox"), div = document.createElement("div");
+        div.className = "msg msg-" + type; if(id) div.id = id; div.innerHTML = html; box.appendChild(div); box.scrollTop = box.scrollHeight; return div.id || "temp";
+    }
+    function themTuChat(jsonStr, msgId) {
+        let data = JSON.parse(decodeURIComponent(jsonStr)); data.forEach(q => danhSach.push(q)); renderList();
+        let btn = document.querySelector(`#${msgId} button`); if(btn) { btn.className = "btn btn-sm btn-secondary mt-1 w-100"; btn.innerText = "Đã thêm"; btn.disabled = true; }
+    }
+
+    // --- LƯU VÀ HIỆN LINK CHUẨN ---
+    function luuDatabase() {
+        if(danhSach.length === 0) { alert("Chưa có câu hỏi!"); return; }
+        let tenDe = document.getElementById("tenDeThi").value;
+        let btn = event.target; btn.innerText = "Đang lưu..."; btn.disabled = true;
+
+        fetch('/api/tao-de-thi', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ title: tenDe, questions: danhSach })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if(data.status === "success") {
+                    // 1. Hiện bảng thành công
+                    document.getElementById("successPanel").style.display = "block";
+
+                    // 2. Tạo Link đúng từ Mã Đề trả về
+                    let fullLink = window.location.origin + "/vao-thi?id=" + data.examCode;
+                    document.getElementById("examLink").value = fullLink;
+
+                    // 3. Cập nhật nút "Xem chi tiết" trỏ vào đúng bài vừa tạo
+                    let btnChiTiet = document.getElementById("btnXemChiTiet");
+                    btnChiTiet.href = "/chi-tiet-de/" + data.examCode;
+
+                    // 4. Cuộn xuống
+                    document.querySelector('.left-panel').scrollTop = document.querySelector('.left-panel').scrollHeight;
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(e => alert("Lỗi: " + e))
+            .finally(() => { btn.innerText = "LƯU ĐỀ THI"; btn.disabled = false; });
+    }
+
+    function copyLink() {
+        let copyText = document.getElementById("examLink");
+        copyText.select();
+        document.execCommand("copy");
+        alert("Đã copy: " + copyText.value);
+    }
+</script>
+</body>
+</html>

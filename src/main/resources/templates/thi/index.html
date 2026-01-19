@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${exam.title}">Làm Bài Thi</title> <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0ebf8; font-family: 'Segoe UI', sans-serif; }
+        .form-container { max-width: 700px; margin: 40px auto; }
+        .top-stripe { height: 10px; background-color: #673ab7; border-radius: 8px 8px 0 0; }
+        .card-question { margin-bottom: 15px; border: 1px solid #dadce0; border-radius: 8px; background: white; padding: 24px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container form-container">
+
+    <div id="infoSection" class="card border-0 shadow-sm rounded-3">
+        <div class="top-stripe"></div>
+        <div class="card-body p-4">
+            <h1 class="fw-bold mb-3" th:text="${exam.title}">Tên Đề Thi</h1>
+            <p class="text-muted" th:text="${exam.description}">Mô tả đề thi</p>
+            <hr>
+
+            <input type="hidden" id="examCode" th:value="${exam.examCode}">
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
+                <input type="text" id="hoTen" class="form-control"
+                       th:value="${session.currentUser != null ? session.currentUser.fullName : ''}"
+                       placeholder="Nhập họ tên của bạn">
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">Email / Mã SV <span class="text-danger">*</span></label>
+                <input type="text" id="maSV" class="form-control"
+                       th:value="${session.currentUser != null ? session.currentUser.email : ''}"
+                       placeholder="Nhập mã sinh viên">
+            </div>
+
+            <button onclick="batDauLamBai()" class="btn btn-primary px-4 py-2" style="background-color: #673ab7; border: none;">
+                BẮT ĐẦU LÀM BÀI
+            </button>
+        </div>
+    </div>
+
+    <div id="examSection" class="hidden">
+
+        <div th:each="q, i : ${exam.questions}" class="card-question shadow-sm">
+            <h5 class="mb-3 fw-bold">
+                <span class="text-primary" th:text="'Câu ' + ${i.count} + ':'"></span>
+                <span th:text="${q.content}">Nội dung câu hỏi sẽ hiện ở đây</span>
+            </h5>
+
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" th:name="'q_' + ${q.id}" value="A">
+                <label class="form-check-label" th:text="${q.optionA}">Đáp án A</label>
+            </div>
+
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" th:name="'q_' + ${q.id}" value="B">
+                <label class="form-check-label" th:text="${q.optionB}">Đáp án B</label>
+            </div>
+
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" th:name="'q_' + ${q.id}" value="C">
+                <label class="form-check-label" th:text="${q.optionC}">Đáp án C</label>
+            </div>
+
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" th:name="'q_' + ${q.id}" value="D">
+                <label class="form-check-label" th:text="${q.optionD}">Đáp án D</label>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between pb-5">
+            <button onclick="quayLai()" class="btn btn-light text-secondary">Quay lại</button>
+            <button onclick="nopBai()" class="btn btn-success px-5 py-2 fw-bold shadow-sm">NỘP BÀI</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 1. Chuyển màn hình
+    function batDauLamBai() {
+        const hoTen = document.getElementById('hoTen').value;
+        const maSV = document.getElementById('maSV').value;
+        if (!hoTen || !maSV) { alert("Vui lòng điền thông tin cá nhân!"); return; }
+        document.getElementById('infoSection').classList.add('hidden');
+        document.getElementById('examSection').classList.remove('hidden');
+        window.scrollTo(0, 0); // Cuộn lên đầu trang
+    }
+
+    function quayLai() {
+        document.getElementById('examSection').classList.add('hidden');
+        document.getElementById('infoSection').classList.remove('hidden');
+    }
+
+    // 2. Logic Nộp Bài (Đã sửa để tự động lấy mọi câu hỏi)
+    function nopBai() {
+        if(!confirm("Bạn chắc chắn muốn nộp bài chứ?")) return;
+
+        const hoTen = document.getElementById('hoTen').value;
+        const maSV = document.getElementById('maSV').value;
+        const examCode = document.getElementById('examCode').value;
+
+        // Tự động tìm tất cả các câu trả lời đã chọn
+        let dapAn = {};
+        // Tìm tất cả thẻ input radio đang được check nằm trong vùng làm bài
+        let checkedRadios = document.querySelectorAll('#examSection input[type="radio"]:checked');
+
+        checkedRadios.forEach(radio => {
+            // radio.name sẽ là "q_123" (với 123 là ID câu hỏi)
+            // radio.value sẽ là "A", "B"...
+            dapAn[radio.name] = radio.value;
+        });
+
+        const duLieu = {
+            examCode: examCode, // Gửi kèm mã đề
+            hoTen: hoTen,
+            maSV: maSV,
+            dapAn: dapAn
+        };
+
+        // Gửi API
+        fetch('/nop-bai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(duLieu)
+        })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                window.location.href = "/lich-su"; // Nộp xong chuyển về trang lịch sử
+            })
+            .catch(error => alert('Lỗi: ' + error));
+    }
+</script>
+
+</body>
+</html>
